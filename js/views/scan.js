@@ -59,7 +59,7 @@ function fillForm() {
   $("fSub").innerHTML = "<option value=''>— اختاري المادة —</option>" + state.subjects.map((s) => `<option>${esc(s.name)}</option>`).join("");
   Object.assign($("fGrp"), { value: c.group }); $("fType").value = c.type; $("fSub").value = c.subject;
   $("fDate").value = c.date; $("fFrom").value = c.from; $("fGrace").value = c.grace;
-  FORM.forEach((i) => ($(i).disabled = !c.manual));
+  FORM.forEach((i) => ($(i).disabled = ENFORCE_SCHEDULE && !c.manual));
 }
 function readForm() {
   Object.assign(state.session, { group: $("fGrp").value, type: $("fType").value, subject: $("fSub").value, date: $("fDate").value || today(),
