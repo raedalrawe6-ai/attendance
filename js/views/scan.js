@@ -28,7 +28,7 @@ export function record(id, { status = null, manual = false } = {}) {
   }
   const time = nowHM(), own = studentGroup(s, c.type), guest = !inGroup(s, c.group);
   status ||= c.from && c.date === today() && mins(time) > mins(c.from) + (+c.grace || 0) ? "متأخر" : "حاضر";
-  const note = [guest && "ضيف من " + own, manual && "يدوي", !live && "خارج الوقت"].filter(Boolean).join(" · ");
+  const note = [guest && "ضيف من " + own, manual && "يدوي", ENFORCE_SCHEDULE && !live && "خارج الوقت"].filter(Boolean).join(" · ");
   state.pending.push({ date: c.date, time, student_id: id, subject: c.subject, type: c.type, status, group_code: c.group, note });
   flash(`${status === "عذر" ? "ع" : "✓"} ${s.name}${guest ? ` (من ${own})` : ""}${status === "متأخر" ? " – متأخر" : ""}`, guest || status !== "حاضر" ? "f-dup" : "f-ok");
   beep(guest ? 660 : 880);
@@ -71,7 +71,7 @@ export function init() {
   $("fGrp").innerHTML = GROUPS.map((g) => `<option value="${g}">${g}${typeOfGroup(g) === "نظري" ? " (الشعبة كاملة)" : ""}</option>`).join("");
   FORM.forEach((i) => $(i).addEventListener("input", readForm));
   $("fGrp").addEventListener("change", () => { $("fType").value = typeOfGroup($("fGrp").value); readForm(); });
-  $("manualBtn").onclick = () => { if (confirm("تفتحين محاضرة يدوية خارج الجدول؟ التسجيلات راح تنعلّم \"خارج الوقت\".")) { state.session.manual = true; state.session.auto = false; emit(); } };
+  $("manualBtn").onclick = () => { if (confirm("تفتحين محاضرة يدوية خارج الجدول؟")) { state.session.manual = true; state.session.auto = false; emit(); } };
   $("autoBtn").onclick = () => { autoSession(true); emit(); };
   $("startBtn").onclick = start;
   $("stopBtn").onclick = () => scanner?.isScanning && scanner.stop();
@@ -100,7 +100,7 @@ export function render() {
   fillForm();
   b.hidden = false;
   if (isLive()) { b.className = "banner"; b.textContent = `📅 حسب الجدول: ${c.type} ${c.group} · ${c.subject}`; }
-  else if (c.manual) { b.className = "banner man"; b.textContent = "✎ محاضرة يدوية – التسجيلات تنعلّم خارج الوقت"; }
+  else if (c.manual) { b.className = "banner man"; b.textContent = "✎ محاضرة يدوية"; }
   else if (!ENFORCE_SCHEDULE) { b.hidden = true; } // lock off: no banner outside timetable
   else { b.className = "banner lock"; b.textContent = "🔒 ماكو محاضرة بالجدول هسة – المسح مقفول"; }
   $("autoBtn").hidden = c.auto; $("manualBtn").hidden = c.manual;
