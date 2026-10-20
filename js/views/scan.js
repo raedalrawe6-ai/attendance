@@ -4,6 +4,8 @@ import { $, esc, today, nowHM, mins, beep, copyText, GROUPS, typeOfGroup, inGrou
 import { autoSession, isLive } from "../core/session.js";
 import { members } from "../core/rules.js";
 import { flush } from "../core/api.js";
+import { ENFORCE_SCHEDULE } from "../core/config.js";
+import { ENFORCE_SCHEDULE } from "../core/config.js";
 
 const FORM = ["fGrp", "fType", "fSub", "fDate", "fFrom", "fGrace"];
 const flash = (t, c) => { const f = $("flash"); f.className = "flash " + c; f.textContent = t; };
@@ -21,7 +23,7 @@ export function record(id, { status = null, manual = false } = {}) {
   if (!s) return false;
   if (!state.subjects.some((x) => x.name === c.subject)) { flash("اختاري المادة من القائمة أول", "f-dup"); beep(400); return false; }
   const live = isLive();
-  if (!live && !c.manual) { flash("🔒 المسح مقفول – ماكو محاضرة بالجدول هسة", "f-bad"); beep(200); return false; }
+  if (ENFORCE_SCHEDULE && !live && !c.manual) { flash("🔒 المسح مقفول – ماكو محاضرة بالجدول هسة", "f-bad"); beep(200); return false; }
   if (allRecords().some((r) => r.date === c.date && r.student_id === id && r.subject === c.subject && r.type === c.type)) {
     flash("مسجّل مسبقاً: " + s.name, "f-dup"); beep(400); return false;
   }
@@ -99,6 +101,8 @@ export function render() {
   fillForm();
   if (isLive()) { b.className = "banner"; b.textContent = `📅 حسب الجدول: ${c.type} ${c.group} · ${c.subject}`; }
   else if (c.manual) { b.className = "banner man"; b.textContent = "✎ محاضرة يدوية – التسجيلات تنعلّم خارج الوقت"; }
+  else if (!ENFORCE_SCHEDULE) { b.className = "banner man"; b.textContent = "🔓 قفل الوقت مطفي – المسح مفتوح (تنعلّم خارج الوقت)"; }
+  else if (!ENFORCE_SCHEDULE) { b.className = "banner man"; b.textContent = "🔓 قفل الوقت مطفي – المسح مفتوح (تنعلّم خارج الوقت)"; }
   else { b.className = "banner lock"; b.textContent = "🔒 ماكو محاضرة بالجدول هسة – المسح مقفول"; }
   $("autoBtn").hidden = c.auto; $("manualBtn").hidden = c.manual;
   const own = R.filter((r) => { const s = student(r.student_id); return s && inGroup(s, c.group) && r.status !== "عذر"; }).length;
