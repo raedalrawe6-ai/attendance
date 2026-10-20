@@ -49,7 +49,7 @@ function renderDetail(x) {
     list("✓ حضروا ويه كروبهم", x.present, "p", ([s, r]) => `<li><span>${nm(s)}</span><span class="${r.status === "متأخر" ? "l" : "mute"}">${esc(r.time)}${r.status === "متأخر" ? " متأخر" : ""}</span></li>`) +
     list("↗ حضروا ويه كروب ثاني", x.wentElsewhere, "x", ([s, r]) => `<li><span>${nm(s)}</span><span class="tag">راح لـ ${esc(r.group_code)}</span></li>`) +
     list("✗ غابوا", x.absent, "a", (s) => `<li><span>${nm(s)}</span></li>`) +
-    list("ع بعذر", x.excused, "x", ([s]) => `<li><span>${nm(s)}</span></li>`) +
+    list("ع عدهم عذر", x.excused, "x", ([s]) => `<li><span>${nm(s)}</span></li>`) +
     list("↙ ضيوف من كروبات ثانية", x.guests, "x", (r) => { const s = student(r.student_id); return `<li><span>${esc(s?.name || r.student_id)}</span><span class="tag">من ${esc(s ? studentGroup(s, r.type) : "?")}</span></li>`; });
 }
 
