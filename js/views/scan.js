@@ -5,7 +5,6 @@ import { autoSession, isLive } from "../core/session.js";
 import { members } from "../core/rules.js";
 import { flush } from "../core/api.js";
 import { ENFORCE_SCHEDULE } from "../core/config.js";
-import { ENFORCE_SCHEDULE } from "../core/config.js";
 
 const FORM = ["fGrp", "fType", "fSub", "fDate", "fFrom", "fGrace"];
 const flash = (t, c) => { const f = $("flash"); f.className = "flash " + c; f.textContent = t; };
@@ -101,7 +100,6 @@ export function render() {
   fillForm();
   if (isLive()) { b.className = "banner"; b.textContent = `📅 حسب الجدول: ${c.type} ${c.group} · ${c.subject}`; }
   else if (c.manual) { b.className = "banner man"; b.textContent = "✎ محاضرة يدوية – التسجيلات تنعلّم خارج الوقت"; }
-  else if (!ENFORCE_SCHEDULE) { b.className = "banner man"; b.textContent = "🔓 قفل الوقت مطفي – المسح مفتوح (تنعلّم خارج الوقت)"; }
   else if (!ENFORCE_SCHEDULE) { b.className = "banner man"; b.textContent = "🔓 قفل الوقت مطفي – المسح مفتوح (تنعلّم خارج الوقت)"; }
   else { b.className = "banner lock"; b.textContent = "🔒 ماكو محاضرة بالجدول هسة – المسح مقفول"; }
   $("autoBtn").hidden = c.auto; $("manualBtn").hidden = c.manual;
