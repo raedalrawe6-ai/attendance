@@ -22,7 +22,7 @@ export function init() {
   };
   $("riskBtn").onclick = () => {
     const out = atRisk(0), box = $("riskBox"); box.hidden = false;
-    box.innerHTML = `<b>المهددين بالحرمان (${out.length})</b><ul>${out.map((o) => `<li><span>${esc(o.s.name)} <span class="tag">${studentGroup(o.s, o.type)}</span></span><span class="${o.over ? "a" : "l"}">${esc(o.subject)} ${o.type}: ${o.n}/${o.lim}</span></li>`).join("") || "<li class='mute'>ماكو أحد</li>"}</ul>`;
+    box.innerHTML = `<b>قريبين من الفصل (${out.length})</b><ul>${out.map((o) => `<li><span>${esc(o.s.name)} <span class="tag">${studentGroup(o.s, o.type)}</span></span><span class="${o.over ? "a" : "l"}">${esc(o.subject)} ${o.type}: ${o.n}/${o.lim}</span></li>`).join("") || "<li class='mute'>ماكو أحد</li>"}</ul>`;
   };
 }
 

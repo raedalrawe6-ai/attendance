@@ -7,11 +7,12 @@ import { pull, flush, subscribe } from "./core/api.js";
 import * as scan from "./views/scan.js";
 import * as log from "./views/log.js";
 import * as dash from "./views/dash.js";
+import * as days from "./views/days.js";
 import * as report from "./views/report.js";
 import * as settings from "./views/settings.js";
 
 // Register new tabs here (key must match data-tab in index.html and section id="tab-<key>").
-const VIEWS = { scan, log, dash, report, settings };
+const VIEWS = { scan, log, days, dash, report, settings };
 let active = "scan", started = false;
 
 const status = (t, ok) => { const s = $("sync"); s.textContent = t; s.className = "pill " + (ok ? "ok" : "warn"); };

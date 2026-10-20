@@ -33,7 +33,7 @@
   <nav class="tabs" id="tabs">
     <button data-tab="scan" class="on">المسح</button>
     <button data-tab="log">السجل</button>
-    <button data-tab="dash">اللوحة</button>
+    <button data-tab="days">الأيام</button><button data-tab="dash">اللوحة</button>
     <button data-tab="report">التقرير</button>
     <button data-tab="settings">الإعدادات</button>
   </nav>
@@ -60,11 +60,16 @@
     <section id="tab-log">
       <div class="card">
         <div class="row tight"><label>المجموعة<select id="vGrp"></select></label><label>المادة<select id="vSub"></select></label></div>
-        <div class="row"><button class="btn" id="xlsBtn">⬇ Excel هذي المجموعة</button><button class="btn ghost" id="riskBtn">⚠ المهددين بالحرمان</button></div>
+        <div class="row"><button class="btn" id="xlsBtn">⬇ Excel هذي المجموعة</button><button class="btn ghost" id="riskBtn">⚠ قريبين من الفصل</button></div>
         <p class="mute">✓ حاضر · <span class="l">م</span> متأخر · <span class="x">ع</span> عذر · <span class="a">غ</span> غائب – اضغطي على "غ" حتى تحوليه عذر.</p>
       </div>
       <div class="card" id="riskBox" hidden></div>
       <div class="card scroll-x"><table id="tbl"></table></div>
+    </section>
+
+    <section id="tab-days">
+      <div class="chips" id="dayChips"></div>
+      <div id="dayBody"></div>
     </section>
 
     <section id="tab-dash">

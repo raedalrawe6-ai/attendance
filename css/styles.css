@@ -51,3 +51,32 @@ td.a{cursor:pointer}
 tr.warn td:first-child{background:var(--warnb)}
 tr.over td:first-child{background:var(--badb);color:var(--bad);font-weight:700}
 .barrow{margin:10px 0}
+
+/* ===== Days tab ===== */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch}
+.chip{flex:0 0 auto;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font:inherit;font-weight:700;font-size:13px;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:2px}
+.chip small{font-weight:400;color:var(--mute);font-size:11px}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}.chip.on small{color:#d8efe9}
+.grp{display:block;width:100%;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:inherit;cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.stats div{background:var(--bg);border-radius:10px;padding:8px 4px;text-align:center}
+.stats b{display:block;font-size:20px}.stats span{font-size:12px;color:var(--mute)}
+details.card summary{display:flex;justify-content:space-between;align-items:center}
+
+/* ===== Smoother look + phone layout ===== */
+body{background:linear-gradient(180deg,#f8f6f1 0%,#efece4 100%) fixed;-webkit-font-smoothing:antialiased}
+.card{box-shadow:0 1px 2px rgba(0,0,0,.03),0 4px 14px rgba(0,0,0,.03);border-color:#ebe7de}
+.tabs{background:rgba(246,244,239,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);overflow-x:auto}
+.tabs button{flex:1 1 0;min-width:0;font-size:12px;padding:9px 0}
+li{flex-wrap:wrap}li>span:last-child{margin-inline-start:auto}
+@media (max-width:520px){
+  input,select{font-size:16px}                       /* stops iOS zoom on focus */
+  .row{flex-wrap:wrap}
+  .row>label{flex:1 1 calc(50% - 8px);min-width:0}   /* date/time/grace no longer overlap */
+  input[type=date],input[type=time]{min-width:0;-webkit-appearance:none;appearance:none}
+  .wrap{padding:4px 12px 40px}
+  .card{padding:12px}
+  .barrow .row{flex-wrap:nowrap}
+  .stats b{font-size:17px}
+  #rOut li,#riskBox li{font-size:14px}
+}

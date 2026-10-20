@@ -33,10 +33,10 @@ export function render() {
   $("rOut").innerHTML =
     `<div class="card"><b>الملخص</b><p>${sessions.length} محاضرة · ${inR.length - count("عذر")} حضور · ${count("متأخر")} تأخير · ${count("عذر")} عذر</p></div>` +
     `<div class="card"><b>نسبة الحضور لكل مجموعة</b>${G.map((g) => bar(g, groups[g].n + " محاضرة", pc(groups[g]))).join("") || "<p class='mute'>ماكو محاضرات بهالفترة</p>"}</div>` +
-    list("تجاوزوا حد الغياب", over, "a") + list("قريبين من الحرمان", near, "l") +
+    list("تجاوزوا حد الغياب (مفصولين)", over, "a") + list("قريبين من الفصل", near, "l") +
     `<div class="card"><b>أكثر المتأخرين</b><ul>${late.map(([id, n]) => `<li><span>${esc(student(id)?.name || id)}</span><span class="l">${n}</span></li>`).join("") || "<li class='mute'>ماكو</li>"}</ul></div>`;
 
   const line = (r) => `${r.s.name} – ${r.subject} ${r.type} ${r.n}/${r.lim}`;
   text = `تقرير الحضور ${a} → ${b}\n${sessions.length} محاضرة\n\nنسبة الحضور:\n${G.map((g) => `${g}: ${pc(groups[g])}%`).join("\n")}` +
-    `\n\nتجاوزوا الحد (${over.length}):\n${over.map(line).join("\n")}\n\nقريبين من الحرمان (${near.length}):\n${near.map(line).join("\n")}`;
+    `\n\nتجاوزوا الحد (${over.length}):\n${over.map(line).join("\n")}\n\nقريبين من الفصل (${near.length}):\n${near.map(line).join("\n")}`;
 }
