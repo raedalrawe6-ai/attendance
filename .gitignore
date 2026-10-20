@@ -1,0 +1,3 @@
+# Student data must never be committed (repo is public)
+*seed_students*.sql
+*.xlsx
