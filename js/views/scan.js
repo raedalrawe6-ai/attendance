@@ -98,9 +98,10 @@ export function init() {
 export function render() {
   const c = state.session, R = sessionRecs(), mem = members(c.group), b = $("banner");
   fillForm();
+  b.hidden = false;
   if (isLive()) { b.className = "banner"; b.textContent = `📅 حسب الجدول: ${c.type} ${c.group} · ${c.subject}`; }
   else if (c.manual) { b.className = "banner man"; b.textContent = "✎ محاضرة يدوية – التسجيلات تنعلّم خارج الوقت"; }
-  else if (!ENFORCE_SCHEDULE) { b.className = "banner man"; b.textContent = "🔓 قفل الوقت مطفي – المسح مفتوح (تنعلّم خارج الوقت)"; }
+  else if (!ENFORCE_SCHEDULE) { b.hidden = true; } // lock off: no banner outside timetable
   else { b.className = "banner lock"; b.textContent = "🔒 ماكو محاضرة بالجدول هسة – المسح مقفول"; }
   $("autoBtn").hidden = c.auto; $("manualBtn").hidden = c.manual;
   const own = R.filter((r) => { const s = student(r.student_id); return s && inGroup(s, c.group) && r.status !== "عذر"; }).length;
