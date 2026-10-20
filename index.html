@@ -55,6 +55,122 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:6px;borde
  <div class="card"><button class="btn ghost" id="delLec" style="color:var(--bad)">حذف المحاضرة المختارة</button></div>
 </section>
 </main>
+<script async src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const DEF=[];
+const K="att_b_site_v1";let S=null;
+try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!S)S={students:DEF.map(([id,name])=>({id,name})),lectures:[],cur:null,limit:3};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const $=i=>document.getElementById(i),pad=n=>String(n).padStart(2,"0");
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
+const nowT=()=>{const d=new Date();return pad(d.getHours())+":"+pad(d.getMinutes())};
+const hm=t=>new Date(t).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+const cur=()=>S.lectures.find(l=>l.id===S.cur);
+const lname=l=>(l.sub||"محاضرة")+" · "+l.type+" · "+l.date+(l.from?" · "+l.from:"");
+const late=(l,t)=>{if(!l.from)return false;return t>new Date(l.date+"T"+l.from).getTime()+(+l.grace||0)*60000};
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button,section").forEach(x=>x.classList.remove("on"));b.classList.add("on");$(b.dataset.t).classList.add("on");render()});
+function newLecture(){const p=cur();const l={id:"L"+Date.now(),sub:p?p.sub:"",type:p?p.type:"نظري",date:today(),from:nowT(),grace:p?p.grace:10,rec:{}};S.lectures.push(l);S.cur=l.id;save();fill();render()}
+function fill(){const l=cur();if(!l)return;$("fSub").value=l.sub;$("fType").value=l.type;$("fDate").value=l.date;$("fFrom").value=l.from;$("fGrace").value=l.grace}
+$("newLec").onclick=newLecture;
+$("lecSel").onchange=e=>{S.cur=e.target.value;save();fill();render()};
+$("saveLec").onclick=()=>{const l=cur();l.sub=$("fSub").value.trim();l.type=$("fType").value;l.date=$("fDate").value;l.from=$("fFrom").value;l.grace=+$("fGrace").value||0;save();render();msg("انحفظت بيانات المحاضرة","f-ok")};
+function render(){
+ if(!S.lectures.length){newLecture();return}
+ if(!S.students.length)msg("روح للإعدادات والصق أسماء الطلاب أول","f-dup");
+ $("lecSel").innerHTML=S.lectures.map(l=>`<option value="${l.id}" ${l.id===S.cur?"selected":""}>${lname(l)}</option>`).join("");
+ const L=cur(),ids=Object.keys(L.rec);
+ $("cnt").textContent=ids.length+" / "+S.students.length;
+ $("present").innerHTML=ids.sort((a,b)=>L.rec[b]-L.rec[a]).map(id=>{const s=S.students.find(x=>x.id===id);return `<li>✓ ${s?s.name:id} <span class="mute">${hm(L.rec[id])}</span>${late(L,L.rec[id])?' <span class="l">متأخر</span>':""}</li>`}).join("")||'<li class="mute">بعد ماكو أحد</li>';
+ $("limit").value=S.limit;
+ $("tbl").innerHTML=`<tr><th>الطالب</th>${S.lectures.map((l,i)=>`<th>م${i+1}<div class="mute">${l.sub||""} ${l.type}<br>${l.date}</div></th>`).join("")}<th>غياب</th></tr>`+S.students.map(s=>{let ab=0;const c=S.lectures.map(l=>{const t=l.rec[s.id];if(t)return late(l,t)?'<td class="l">متأخر</td>':'<td class="p">✓</td>';ab++;return'<td class="a">غ</td>'}).join("");const over=ab>S.limit?' class="a"':"";return `<tr><td${over}>${s.name}</td>${c}<td${over}>${ab}</td></tr>`}).join("");
+ $("names").value=S.students.map(s=>s.id+" "+s.name).join("\n");
+}
+function msg(t,c){const f=$("flash");f.className="flash "+c;f.textContent=t}
+function beep(hz){try{const a=new(window.AudioContext||webkitAudioContext)(),o=a.createOscillator();o.frequency.value=hz;o.connect(a.destination);o.start();o.stop(a.currentTime+.12)}catch(e){}if(navigator.vibrate)navigator.vibrate(60)}
+function parseId(t){t=(t||"").trim();let m=t.match(/[?&]s=([A-Za-z0-9]+)/);if(m)return m[1];m=t.match(/^ATT\|([A-Za-z0-9]+)/);if(m)return m[1];return null}
+let last="",lastT=0;
+function onCode(t){
+ const now=Date.now();if(t===last&&now-lastT<3000)return;last=t;lastT=now;
+ const id=parseId(t),s=id&&S.students.find(x=>x.id===id);
+ if(!s){msg("✗ كود مو من القائمة","f-bad");beep(200);return}
+ const L=cur();
+ if(L.rec[s.id]){msg("مسجّل مسبقاً: "+s.name,"f-dup");beep(400);return}
+ L.rec[s.id]=now;save();const lt=late(L,now);msg("✓ "+s.name+(lt?" (متأخر)":""),lt?"f-dup":"f-ok");beep(880);render();
+}
+let sc=null;
+$("startBtn").onclick=async()=>{if(typeof Html5Qrcode==="undefined"){msg("لحظة، دا يحمّل الكاميرا… اضغط مرة ثانية بعد ثواني","f-dup");return}try{sc=sc||new Html5Qrcode("reader");if(sc.isScanning)return;await sc.start({facingMode:"environment"},{fps:12,qrbox:{width:240,height:240}},onCode,()=>{});msg("وجّه الكاميرا على كود الطالب","f-ok")}catch(e){msg("الكاميرا ما اشتغلت: اسمح للموقع باستخدام الكاميرا","f-bad")}};
+$("stopBtn").onclick=()=>{if(sc&&sc.isScanning)sc.stop()};
+$("limit").onchange=e=>{S.limit=+e.target.value||0;save();render()};
+$("saveNames").onclick=()=>{const list=$("names").value.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.match(/^([A-Za-z0-9]+)\s+(.+)$/);return m?{id:m[1],name:m[2]}:null}).filter(Boolean);if(list.length){S.students=list;save();render();msg("انحفظ الطلاب","f-ok")}};
+function twice(b,txt){if(b.dataset.arm){delete b.dataset.arm;return true}b.dataset.arm=1;const o=b.textContent;b.textContent=txt;setTimeout(()=>{delete b.dataset.arm;b.textContent=o},3000);return false}
+$("delLec").onclick=e=>{if(!twice(e.target,"اضغط مرة ثانية للتأكيد"))return;e.target.textContent="حذف المحاضرة المختارة";S.lectures=S.lectures.filter(l=>l.id!==S.cur);S.cur=S.lectures.length?S.lectures.at(-1).id:null;save();fill();render()};
+$("xls").onclick=()=>{
+ const rows=[["ت","الرقم","الاسم",...S.lectures.map(lname),"عدد الغياب"]];
+ S.students.forEach((s,i)=>{let ab=0;rows.push([i+1,s.id,s.name,...S.lectures.map(l=>{const t=l.rec[s.id];if(t)return hm(t)+(late(l,t)?" متأخر":"");ab++;return"غ"}),ab])});
+ const ws=XLSX.utils.aoa_to_sheet(rows);ws["!cols"]=[{wch:4},{wch:7},{wch:30}];const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,"الحضور");XLSX.writeFile(wb,"حضور-شعبة-B-"+today()+".xlsx");
+};
+fill();render();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script></body></html>
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="الحضور">
+<title>سجل الحضور</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1c1b19;--mute:#6b675f;--line:#e4e0d6;--acc:#0f6e5c;--ok:#1f8a4c;--bad:#c0392b;--warn:#b7791f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+header{padding:16px 16px 4px;max-width:700px;margin:auto}h1{margin:0;font-size:20px}
+nav{display:flex;gap:6px;padding:8px 16px;max-width:700px;margin:auto}
+nav button{flex:1;padding:10px 4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;font-weight:600}
+nav button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+main{max-width:700px;margin:auto;padding:4px 16px 40px}section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.btn{padding:12px 16px;border:0;border-radius:10px;background:var(--acc);color:#fff;font:inherit;font-weight:700;width:100%}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;margin-top:4px}
+label{display:block;font-size:13px;color:var(--mute)}
+.row{display:flex;gap:8px}.row>*{flex:1}
+#reader{width:100%;border-radius:12px;overflow:hidden;background:#000;min-height:10px}
+.flash{padding:14px;border-radius:12px;font-weight:700;text-align:center;margin:10px 0;font-size:19px;min-height:54px}
+.f-ok{background:#e3f4ea;color:var(--ok)}.f-dup{background:#fdf3e1;color:var(--warn)}.f-bad{background:#fbe6e3;color:var(--bad)}
+.count{font-size:30px;font-weight:800;text-align:center}.mute{color:var(--mute);font-size:13px}
+ul{list-style:none;padding:0;margin:0}li{padding:7px 0;border-bottom:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:6px;border-bottom:1px solid var(--line);text-align:right}
+.p{color:var(--ok);font-weight:700}.a{color:var(--bad);font-weight:700}.l{color:var(--warn);font-weight:700}
+</style></head><body>
+<header><h1>سجل الحضور – شعبة B</h1><div class="mute">البيانات محفوظة على هذا الجهاز فقط</div></header>
+<nav><button data-t="scan" class="on">المسح</button><button data-t="log">السجل</button><button data-t="set">الإعدادات</button></nav>
+<main>
+<section id="scan" class="on">
+ <div class="card">
+  <label>المحاضرة<select id="lecSel"></select></label>
+  <div class="row" style="margin-top:8px"><button class="btn ghost" id="newLec">+ محاضرة جديدة</button></div>
+  <div id="lecForm" style="margin-top:10px">
+   <label>المادة<input id="fSub"></label>
+   <div class="row" style="margin-top:6px"><label>النوع<select id="fType"><option>نظري</option><option>عملي</option></select></label><label>اليوم<input id="fDate" type="date"></label></div>
+   <div class="row" style="margin-top:6px"><label>البداية<input id="fFrom" type="time"></label><label>سماح التأخير (دقيقة)<input id="fGrace" type="number" min="0"></label></div>
+   <button class="btn ghost" id="saveLec" style="margin-top:8px">حفظ بيانات المحاضرة</button>
+  </div>
+ </div>
+ <div class="card">
+  <div class="count" id="cnt">0 / 0</div><div class="mute" style="text-align:center">حاضر</div>
+  <div class="flash" id="flash"></div>
+  <div id="reader"></div>
+  <div class="row" style="margin-top:10px"><button class="btn" id="startBtn">▶ ابدأ المسح</button><button class="btn ghost" id="stopBtn">إيقاف</button></div>
+ </div>
+ <div class="card"><b>الحاضرين</b><ul id="present"></ul></div>
+</section>
+<section id="log">
+ <div class="card"><button class="btn" id="xls">⬇ تنزيل Excel</button><p class="mute">الغياب المسموح: <input id="limit" type="number" min="0" style="width:70px;display:inline-block"></p></div>
+ <div class="card" style="overflow-x:auto"><table id="tbl"></table></div>
+</section>
+<section id="set">
+ <div class="card"><b>الطلاب</b><p class="mute">كل سطر: الرقم ثم الاسم، مثل: B001 احمد ثامر</p><textarea id="names" rows="12" dir="rtl"></textarea><button class="btn" id="saveNames" style="margin-top:8px">حفظ الطلاب</button></div>
+ <div class="card"><button class="btn ghost" id="delLec" style="color:var(--bad)">حذف المحاضرة المختارة</button></div>
+</section>
+</main>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
